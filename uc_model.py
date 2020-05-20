@@ -147,6 +147,9 @@ for w, gen in renewable_gens.items():
 
 print("model setup complete")
 
+m.write("pyomo.lp")
+sys.exit(0)
+
 from pyomo.opt import SolverFactory
 cbc = SolverFactory('cbc')
 
