@@ -1,7 +1,9 @@
 from pyomo.environ import *
 import json
 import sys
+from pyutilib.misc import timing
 
+timing.tic()
 ## Grab instance file from first command line argument
 data_file = sys.argv[1]
 
@@ -15,6 +17,7 @@ time_periods = {t+1 : t for t in range(data['time_periods'])}
 
 gen_startup_categories = {g : list(range(0, len(gen['startup']))) for (g, gen) in thermal_gens.items()}
 gen_pwl_points = {g : list(range(0, len(gen['piecewise_production']))) for (g, gen) in thermal_gens.items()}
+timing.toc("READING JSON AND MODEL SETUP")
 
 print('building model')
 m = ConcreteModel()
@@ -145,9 +148,11 @@ for w, gen in renewable_gens.items():
         m.pw[w,t].setlb(gen['power_output_minimum'][t_idx]) #(24)
         m.pw[w,t].setub(gen['power_output_maximum'][t_idx]) #(24)
 
+timing.toc("FINISHED MODEL SETUP")
 print("model setup complete")
 
 m.write("pyomo.lp")
+timing.toc("WROTE LP FILE")
 sys.exit(0)
 
 from pyomo.opt import SolverFactory
