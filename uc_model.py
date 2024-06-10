@@ -1,6 +1,8 @@
-from pyomo.environ import *
 import json
 import sys
+from pyomo.environ import *
+from pyomo.common import timing
+from pyomo.opt import SolverFactory
 
 ## Grab instance file from first command line argument
 if len(sys.argv) == 1:
@@ -12,6 +14,7 @@ if len(sys.argv) == 3:
 else:
     solver_name = "cbc"
 
+timing.tic()
 print("loading data")
 data = json.load(open(data_file, "r"))
 
@@ -28,7 +31,7 @@ gen_pwl_points = {
     for (g, gen) in thermal_gens.items()
 }
 
-print("building model")
+timing.toc("building model")
 m = ConcreteModel()
 
 m.cg = Var(thermal_gens.keys(), time_periods.keys())
@@ -266,13 +269,10 @@ for w, gen in renewable_gens.items():
         m.pw[w, t].setlb(gen["power_output_minimum"][t_idx])  # (24)
         m.pw[w, t].setub(gen["power_output_maximum"][t_idx])  # (24)
 
-print("model setup complete")
-
-from pyomo.opt import SolverFactory
-
+timing.toc("model setup complete")
 solver = SolverFactory(solver_name)
 
-print("solving")
+timing.toc("solving")
 options = {
     "gurobi": {"ratioGap": 0.01},
     "glpk": {"mipgap": 0.01},
@@ -280,3 +280,5 @@ options = {
     "scip": {"mipgap": 0.01},
 }
 solver.solve(m, options=options[solver_name], tee=True)
+
+timing.toc("done")
