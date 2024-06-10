@@ -3,7 +3,14 @@ import json
 import sys
 
 ## Grab instance file from first command line argument
+if len(sys.argv) == 1:
+    print("uc_model.py <data-file> [<solver>]")
+    sys.exit(0)
 data_file = sys.argv[1]
+if len(sys.argv) == 3:
+    solver_name = sys.argv[2]
+else:
+    solver_name = 'cbc'
 
 print('loading data')
 data = json.load(open(data_file, 'r'))
@@ -133,7 +140,7 @@ for g, gen in thermal_gens.items():
         m.cost_select[g,t] = m.cg[g,t] == sum( (piece['cost'] - piece_cost1)*m.lg[g,l,t] for l,piece in enumerate(gen['piecewise_production'])) #(22)
         m.on_select[g,t] = m.ug[g,t] == sum(m.lg[g,l,t] for l,_ in enumerate(gen['piecewise_production'])) #(23)
 
-m.startup_allowed = Constraint(m.dg_index)
+m.startup_allowed = Constraint(m.dg.index_set())
 for g, gen in thermal_gens.items():
     for s,_ in enumerate(gen['startup'][:-1]): ## all but last
         for t in time_periods:
@@ -148,7 +155,9 @@ for w, gen in renewable_gens.items():
 print("model setup complete")
 
 from pyomo.opt import SolverFactory
-cbc = SolverFactory('cbc')
+solver = SolverFactory(solver_name)
 
 print("solving")
-cbc.solve(m, options={'ratioGap':0.01}, tee=True)
+options = {'gurobi':{'ratioGap':0.01}, 'glpk':{'mipgap':0.01}, 'cbc':{'ratioGap':0.01}, 'scip':{'mipgap':0.01}}
+solver.solve(m, options=options[solver_name], tee=True)
+
