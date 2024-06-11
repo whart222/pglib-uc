@@ -274,7 +274,7 @@ solver = SolverFactory(solver_name)
 
 timing.toc("solving")
 options = {
-    "gurobi": {"ratioGap": 0.01},
+    "gurobi": {"mipgap": 0.01},
     "glpk": {"mipgap": 0.01},
     "cbc": {"ratioGap": 0.01},
     "scip": {"mipgap": 0.01},
