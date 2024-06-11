@@ -279,6 +279,8 @@ options = {
     "cbc": {"ratioGap": 0.01},
     "scip": {"mipgap": 0.01},
 }
-solver.solve(m, options=options[solver_name], tee=True)
+res = solver.solve(m, options=options[solver_name], tee=True)
+timing.toc("Optimization complete")
 
+print(res)
 timing.toc("done")
